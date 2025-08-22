@@ -16,8 +16,8 @@ resource "aws_security_group" "instance" {
   name = "terraform-example-instance"
 
   ingress {
-    from_port   = 8080
-    to_port     = 8080
+    from_port   = var.server_port
+    to_port     = var.server_port
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -30,7 +30,7 @@ resource "aws_instance" "app_server" {
   user_data              = <<-EOF
             #!/bin/bash
             echo "Hello World from `uname -a`" > index.html
-            nohup busybox httpd -f -p 8080 &
+            nohup busybox httpd -f -p ${var.server_port} &
             EOF
 
   user_data_replace_on_change = true
