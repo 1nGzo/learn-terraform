@@ -4,12 +4,12 @@ resource "aws_launch_template" "test" {
   instance_type   = var.instance_type
   vpc_security_group_ids = [aws_security_group.instance.id]
 
-  user_data = base64encode(<<-EOF
-              #!/bin/bash
-              echo "Test page for ASG by terraform from `uname -n`" > index.html
-              nohup busybox httpd -f -p ${var.server_port} &
-              EOF
-            )
+  user_data = base64encode(templatefile("userdata.sh",
+  {
+    server_port = local.http_port
+    db_address = data.terraform_remote_state.db.outputs.address
+    db_port = data.terraform_remote_state.db.outputs.port
+  }))
   lifecycle {
     create_before_destroy = true
   }
@@ -27,7 +27,7 @@ data "aws_subnets" "default" {
 
 resource "aws_lb_listener" "http" {
   load_balancer_arn = aws_lb.example.arn
-  port              = 80
+  port              = local.http_port
   protocol          = "HTTP"
 
   #By default, return a simple 404 page
@@ -43,32 +43,32 @@ resource "aws_lb_listener" "http" {
 }
 
 resource "aws_security_group" "test-alb" {
-  name = "terraform-example-alb-security_groups"
+  name = "${var.cluster_name}-security_groups"
 
   ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "TCP"
-    cidr_blocks = ["0.0.0.0/0"]
+    from_port   = local.http_port
+    to_port     = local.http_port
+    protocol    = local.tcp_protocol
+    cidr_blocks = local.all_ips
   }
 
   egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    from_port   = local.any_port
+    to_port     = local.any_port
+    protocol    = local.any_protocol
+    cidr_blocks = local.all_ops
   }
 }
 
 resource "aws_lb" "example" {
-  name               = "terraform-lb-example"
+  name               = "${var.cluster_name}-alb"
   load_balancer_type = "application"
   subnets            = data.aws_subnets.default.ids
   security_groups    = [aws_security_group.test-alb.id]
 }
 
 resource "aws_lb_target_group" "asg" {
-  name     = "terraform-asg-example"
+  name     = "${var.cluster_name}-tg"
   port     = var.server_port
   protocol = "HTTP"
   vpc_id   = data.aws_vpc.default.id
@@ -95,12 +95,12 @@ resource "aws_autoscaling_group" "test" {
   target_group_arns = [aws_lb_target_group.asg.arn]
   health_check_type = "ELB"
 
-  min_size = 2
-  max_size = 10
+  min_size = var.min_size
+  max_size = var.max_size
 
   tag {
     key                 = "Name"
-    value               = "terraform-asg-test"
+    value               = "${var.cluster_name}-asg"
     propagate_at_launch = true
   }
 }
