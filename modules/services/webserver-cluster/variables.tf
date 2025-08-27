@@ -1,12 +1,13 @@
 variable "instance_name" {
   description = "Value of the ec2 instance's name tag."
   type        = string
-  default     = "learn-terraform"
+  default     = "terraform4test"
 }
 
 variable "instance_type" {
   description = "The ec2 instance's type."
   type        = string
+  default = "t2.micro"
 }
 
 variable "min_size" {
@@ -42,4 +43,10 @@ variable "db_address" {
 variable "db_port" {
   description = "The port of the database."
   type = string
+}
+
+variable "custom_tags" {
+  description = "Custom tags to set on the Instances in the ASG."
+  type = map(string)
+  default = {}
 }
