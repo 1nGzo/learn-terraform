@@ -20,11 +20,9 @@ module "webserver_cluster" {
   db_remote_state_bucket = "terraform-up-and-running-state-for-test"
   db_remote_state_key = "stage/data-stores/mysql/terraform.tfstate"
 
-  min_size = 2
-  max_size = 2
-
   custom_tags = {
     Owner = "Demo"
     ManagedBy = "terraform"
   }
+  enable_autoscaling = false
 }

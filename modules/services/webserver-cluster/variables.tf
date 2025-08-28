@@ -13,11 +13,13 @@ variable "instance_type" {
 variable "min_size" {
   description = "The minimum size of EC2 instance in the ASG."
   type        = number
+  default = 2
 }
 
 variable "max_size" {
   description = "The maximum size of EC2 instance in the ASG."
   type        = number
+  default = 2
 }
 
 variable "cluster_name" {
@@ -49,4 +51,9 @@ variable "custom_tags" {
   description = "Custom tags to set on the Instances in the ASG."
   type = map(string)
   default = {}
+}
+
+variable "enable_autoscaling" {
+  description = "If set to true, enable auto scaling."
+  type = bool
 }
