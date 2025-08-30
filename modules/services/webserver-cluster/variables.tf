@@ -1,7 +1,19 @@
+variable "ami" {
+  description = "The AMI to run instance."
+  type = string
+  default = "ami-0360c520857e3138f"
+}
+
 variable "instance_name" {
   description = "Value of the ec2 instance's name tag."
   type        = string
   default     = "terraform4test"
+}
+
+variable "server_text" {
+  description = "The text the webserver should return."
+  type = string
+  default = "Hello, World"
 }
 
 variable "instance_type" {
@@ -57,3 +69,4 @@ variable "enable_autoscaling" {
   description = "If set to true, enable auto scaling."
   type = bool
 }
+

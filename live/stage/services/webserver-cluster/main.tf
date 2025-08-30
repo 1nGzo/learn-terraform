@@ -11,7 +11,9 @@ module "database" {
 module "webserver_cluster" {
   source = "../../../../modules/services/webserver-cluster"
 
+  server_text = "New server page 1"
   cluster_name = "webserver-stage"
+  max_size = 3
   db_remote_state_bucket = "terraform-up-and-running-state-for-test"
   db_remote_state_key = "stage/data-stores/mysql/terraform.tfstate"
 

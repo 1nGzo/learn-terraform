@@ -1,11 +1,12 @@
 resource "aws_launch_template" "test" {
   name_prefix            = "terraform-asg-template-"
-  image_id               = data.aws_ami.ubuntu.id
+  image_id               = var.ami
   instance_type          = var.instance_type
   vpc_security_group_ids = [aws_security_group.instance.id]
 
   user_data = base64encode(templatefile("${path.module}/userdata.sh",
     {
+      server_text = var.server_text
       server_port = local.http_port
       db_address  = var.db_address
       db_port     = var.db_port
@@ -107,19 +108,45 @@ resource "aws_autoscaling_group" "test" {
   }
 
   vpc_zone_identifier = data.aws_subnets.default.ids
+ 
+  lifecycle {
+    create_before_destroy = true
+  }
 
   target_group_arns = [aws_lb_target_group.asg.arn]
   health_check_type = "ELB"
-
+  min_elb_capacity = var.min_size
   min_size = var.min_size
   max_size = var.max_size
+  
+  #配置下面refresh块让asg刷新配置
+  instance_refresh {
+    strategy = "Rolling"
+    preferences {
+      min_healthy_percentage = 50
+    }
+    triggers = ["max_size"]
+  }
 
   tag {
     key                 = "Name"
     value               = "${var.cluster_name}-asg"
     propagate_at_launch = true
   }
+
+  dynamic "tag" {
+    for_each = {
+      for key,value in var.custom_tags:key => upper(value)
+      if key != "Name"
+    }
+    content {
+      key = tag.key
+      value = tag.value
+      propagate_at_launch = true
+    }
+  }
 }
+
 
 resource "aws_autoscaling_schedule" "scale_out_during_business_hours" {
   count = var.enable_autoscaling ? 1 : 0
