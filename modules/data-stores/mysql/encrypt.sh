@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-#本脚本用于加密yaml
+#本脚本用于加密yaml,在执行前需要先建立kms key
 
 CMK_ID="$1"
 AWS_REGION="$2"
