@@ -1,0 +1,6 @@
+{
+    "window.menuBarVisibility": "compact",
+    "window.titleBarStyle": "custom",
+    "terminal.integrated.gpuAcceleratedTerminal": false,
+    "workbench.editor.editor.gpuAcceleratedTerminal": false
+}

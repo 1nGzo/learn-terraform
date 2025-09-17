@@ -1,16 +1,11 @@
-resource "aws_launch_template" "test" {
+resource "aws_launch_template" "asg" {
   name_prefix            = "terraform-asg-template-"
   image_id               = var.ami
   instance_type          = var.instance_type
   vpc_security_group_ids = [aws_security_group.instance.id]
 
-  user_data = base64encode(templatefile("${path.module}/userdata.sh",
-    {
-      server_text = var.server_text
-      server_port = local.http_port
-      db_address  = var.db_address
-      db_port     = var.db_port
-  }))
+  user_data = var.user_data
+
   lifecycle {
     create_before_destroy = true
   }
@@ -28,9 +23,9 @@ resource "aws_security_group" "instance" {
   }
 }
 
-resource "aws_autoscaling_group" "test" {
+resource "aws_autoscaling_group" "asg" {
   launch_template {
-    id      = aws_launch_template.test.id
+    id      = aws_launch_template.asg.id
     version = "$Latest"
   }
 
@@ -83,7 +78,7 @@ resource "aws_autoscaling_schedule" "scale_out_during_business_hours" {
   max_size = 10
   desired_capacity = 10
   recurrence = "0 9 * * *"
-  autoscaling_group_name = aws_autoscaling_group.test.name
+  autoscaling_group_name = aws_autoscaling_group.asg.name
 }
 
 resource "aws_autoscaling_schedule" "scale_in_at_night" {
@@ -94,5 +89,5 @@ resource "aws_autoscaling_schedule" "scale_in_at_night" {
   max_size = 10
   desired_capacity = 2
   recurrence = "0 9 * * *"
-  autoscaling_group_name = aws_autoscaling_group.test.name
+  autoscaling_group_name = aws_autoscaling_group.asg.name
 }
